@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ice Skate sa moa</title>
+<style>
+  :root {
+    --bg: #E4F1FA;
+    --card: #FFFFFF;
+    --ink: #17324D;
+    --muted: #5F7A93;
+    --accent: #2F7FD1;
+    --accent-ink: #FFFFFF;
+    --chip: #EEF6FC;
+    --line: #B9D6EC;
+    --no: #E0566B;
+  }
+  /* Coffee pages: brown and white */
+  body.coffee {
+    --bg: #7B5640;
+    --ink: #3B2416;
+    --muted: #8A6A55;
+    --accent: #8B5A3C;
+    --chip: #F6EEE7;
+    --line: #DCC7B6;
+  }
+  body.coffee .confirmBtn:disabled { background: #CDB9A8; }
+  body.coffee #content { box-shadow: 0 10px 24px rgba(40,20,8,.35); }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Fredoka", "Trebuchet MS", Arial, sans-serif;
+    margin: 0; min-height: 100vh;
+    display: flex; justify-content: center; align-items: center;
+    background: var(--bg); color: var(--ink); padding: 16px;
+    overflow-x: hidden; transition: background .3s;
+  }
+  #content {
+    background: var(--card); border: 2px solid var(--line);
+    border-radius: 20px; box-shadow: 0 10px 24px rgba(23,50,77,.15);
+    padding: 28px 24px; text-align: center;
+    width: 100%; max-width: 480px; position: relative; z-index: 2;
+  }
+  h2 { margin: 0 0 6px; font-size: 28px; line-height: 1.2; }
+  p.sub { margin: 0 0 18px; color: var(--muted); }
+  .hidden { display: none !important; }
+
+  button { font-family: inherit; cursor: pointer; }
+  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+
+  #yesButton, #noButton, #coffeeBtn, .confirmBtn, #modalYes, #modalNo {
+    font-size: 20px; border: none; border-radius: 14px;
+    padding: 14px 22px; margin: 8px; color: #fff;
+    box-shadow: 0 6px 12px rgba(0,0,0,.18); transition: .2s;
+  }
+  #yesButton, #coffeeBtn, .confirmBtn, #modalYes { background: var(--accent); }
+  #noButton, #modalNo { background: var(--no); }
+  #yesButton:hover, #coffeeBtn:hover, .confirmBtn:hover:not(:disabled), #noButton:hover { box-shadow: 0 10px 18px rgba(0,0,0,.25); }
+  #noButton:disabled, #modalNo:disabled { background: #ddd; color: #666; box-shadow: none; cursor: not-allowed; }
+  .confirmBtn:disabled { background: #A9BCCD; box-shadow: none; cursor: not-allowed; }
+  #message { min-height: 1.4em; margin: 8px 0 0; color: var(--muted); }
+
+  fieldset { border: none; padding: 0; margin: 0 0 18px; text-align: left; }
+  legend { font-weight: 600; font-size: 18px; margin-bottom: 8px; padding: 0; }
+
+  .field {
+    display: block; width: 100%; padding: 10px;
+    font: inherit; font-size: 16px; color: var(--ink);
+    border: 2px solid var(--line); border-radius: 10px; background: #fff;
+  }
+  textarea.field { resize: vertical; font-family: inherit; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chips label { position: relative; }
+  .chips input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+  .chips span {
+    display: block; padding: 9px 13px; border-radius: 12px;
+    background: var(--chip); border: 2px solid var(--line);
+    font-size: 15px; line-height: 1.2; transition: .15s;
+  }
+  .chips input:checked + span { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .chips input:focus-visible + span { outline: 3px solid var(--ink); outline-offset: 2px; }
+
+  .guestDetails { margin-top: 12px; }
+  .guestDetails label { display: block; font-size: 15px; margin-bottom: 10px; color: var(--muted); }
+  .guestDetails .field { margin-top: 4px; }
+
+  .letter {
+    text-align: left; background: var(--chip); border: 2px solid var(--line);
+    border-radius: 14px; padding: 18px 18px; margin: 14px 0 6px; line-height: 1.7;
+  }
+  .letter p { margin: 0 0 10px; }
+  .letter p:last-child { margin-bottom: 0; }
+
+  /* Custom calendar */
+  .cal { background: var(--chip); border: 2px solid var(--line); border-radius: 16px; padding: 12px; }
+  .calHead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .calTitle { font-weight: 600; font-size: 18px; }
+  .calNav {
+    width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--line);
+    background: #fff; color: var(--ink); font-size: 22px; line-height: 1; padding: 0 0 3px;
+    transition: .15s;
+  }
+  .calNav:hover:not(:disabled) { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .calNav:disabled { opacity: .35; cursor: not-allowed; }
+  .calGrid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .calDow { text-align: center; font-size: 13px; font-weight: 600; color: var(--muted); padding: 4px 0 6px; }
+  .calDay {
+    aspect-ratio: 1; min-width: 0; border: 2px solid transparent; border-radius: 12px;
+    background: #fff; color: var(--ink); font-size: 15px; padding: 0; transition: .12s;
+  }
+  .calDay:hover:not(:disabled) { background: var(--line); }
+  .calDay.today { border-color: var(--accent); font-weight: 700; }
+  .calDay.sel, .calDay.sel:hover { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; transform: scale(1.06); }
+  .calDay:disabled { background: transparent; color: var(--muted); opacity: .4; cursor: not-allowed; }
+  .calPick { margin-top: 10px; text-align: center; font-size: 15px; color: var(--muted); }
+  .calPick b { color: var(--ink); }
+  .calGrid button:focus-visible, .calNav:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+
+  .modal {
+    position: fixed; inset: 0; z-index: 10; padding: 16px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(23,50,77,.55);
+  }
+  .modalBox {
+    background: var(--card); border: 2px solid var(--line); border-radius: 20px;
+    box-shadow: 0 14px 32px rgba(0,0,0,.3); padding: 22px 20px;
+    width: 100%; max-width: 380px; text-align: center;
+    animation: pop .2s ease-out;
+  }
+  .modalBox img { display: block; max-width: 100%; max-height: 280px; margin: 0 auto 12px; border-radius: 14px; }
+  #noEmoji { font-size: 72px; line-height: 1.2; margin-bottom: 8px; }
+  .modalBox h3 { margin: 0 0 4px; font-size: 24px; }
+  .modalBox p.sub { margin: 0 0 8px; min-height: 1.2em; }
+  @keyframes pop { from { transform: scale(.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .modalBox { animation: none; } }
+
+  .flake {
+    position: fixed; top: -40px; z-index: 1; pointer-events: none; color: #8FC1EA;
+    animation: fall linear infinite;
+  }
+  @keyframes fall { to { transform: translateY(110vh) rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .flake { animation: none; top: 20px; } }
+</style>
+</head>
+<body>
+<div id="content">
+
+  <!-- STEP 1: the question -->
+  <section id="stepAsk">
+    <h2 id="question">Ice Skating ano G?</h2>
+    <button id="yesButton">YES</button>
+    <button id="noButton">NO</button>
+    <p id="message" aria-live="polite"></p>
+  </section>
+
+  <!-- STEP 2: ice skating form (built by script) -->
+  <section id="stepPick" class="hidden">
+    <h2>pili kana ng date buseng</h2>
+     <div class="letter" style="margin-bottom:18px">
+  <p>full free time ko nov 2 - 8 🗓️</p>
+  <p>we can still hang out kahit start na ng pasukan namin, send ko schedule ko if you want para malaman mo mga free sched ko lmk lang. I can make time naman to hang out with u</p>
+</div><div id="skateForm"></div>
+  </section>
+
+  <!-- STEP 3: thank you letter + coffee offer -->
+  <section id="stepThanks" class="hidden">
+    <h2>See yaa</h2>
+    <div class="letter">
+      <p>set na rin ba sa harland cafe sa bgc? if yes click m button</p>
+    </div>
+    
+    <button id="coffeeBtn">Okay!</button>
+  </section>
+
+  <!-- STEP 4: coffee form (built by script) -->
+  <section id="stepCoffee" class="hidden">
+    <h2>Harland cafee</h2>
+    <p class="sub">Pili ka ulit ng araw at oras</p>
+    <div id="coffeeForm"></div>
+  </section>
+
+  <!-- STEP 5: final thank you letter + typable note -->
+  <section id="stepFinal" class="hidden">
+    <h2>See youu!</h2>
+    <div class="letter">
+      <p>lmk if nagbago isip or may change of plans ka tenksss</p>
+    </div>
+    <fieldset id="noteWrap" style="margin-top:16px">
+      <legend>may gusto ka bang sabihin?</legend>
+      <textarea class="field" id="noteText" rows="3" maxlength="300"
+        placeholder="type mo dito..."></textarea>
+    </fieldset>
+    <button class="confirmBtn" id="noteSend">Send</button>
+    <p id="noteDone" class="sub hidden" aria-live="polite">sent na! tenks 🤎</p>
+  </section>
+
+</div>
+<div id="noModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="noTitle">
+  <div class="modalBox">
+    <img id="noImg" src="" alt="">
+    <div id="noEmoji" class="hidden" aria-hidden="true">&#129402;</div>
+    <h3 id="noTitle">sure ka??</h3>
+    <p id="noMsg" class="sub" aria-live="polite"></p>
+    <button id="modalYes">YES</button>
+    <button id="modalNo">NO</button>
+  </div>
+</div>
+
+<script>
+  var DB_URL = '';
+  var ADMIN_CODE = 'ilikeyouihopeyoufeelthesamewayifeelnojoke';
+  var ADMIN_PAGE = 'admin.html';
+  var NO_POPUPS = [
+    { src: '1.jpg', emoji: '\uD83E\uDD7A', title: 'sure ka??',               msg: '' },
+    { src: '2.jpg', emoji: '\uD83D\uDE22', title: 'weh?', msg: '' },
+    { src: '4.jpg', emoji: '\uD83D\uDE2D', title: 'hmm', msg: '' },
+    { src: '3.jpg', emoji: '\uD83D\uDE4F', title: 'lul bawal tumanggi :P',        msg: '' }
+  ];
+  var TIMES = ['10:00 AM','11:00 AM','12:00 PM','1:00 PM','2:00 PM','3:00 PM','4:00 PM','5:00 PM','6:00 PM','7:00 PM','8:00 PM'];
+
+  var $ = function (id) { return document.getElementById(id); };
+  var yesBtn = $('yesButton'), noBtn = $('noButton'), msg = $('message');
+
+  // Today in local time, as YYYY-MM-DD (earliest date the calendar allows)
+  var TODAY = (function () {
+    var d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 10);
+  })();
+
+  function show(id) {
+    ['stepAsk', 'stepPick', 'stepThanks', 'stepCoffee', 'stepFinal'].forEach(function (s) {
+      $(s).classList.toggle('hidden', s !== id);
+    });
+    var coffee = id === 'stepCoffee' || id === 'stepFinal';
+    document.body.classList.toggle('coffee', coffee);
+    if (coffee) {
+      // clear the snow left over from the ice skating pages
+      document.querySelectorAll('.flake').forEach(function (f) { f.remove(); });
+    }
+  }
+
+  // ---- Build a form (used for both ice skating and coffee) ----
+  function formHTML(p, isCoffee) {
+    var times = TIMES.map(function (t) {
+      return '<label><input type="radio" name="' + p + 'time" value="' + t + '"><span>' + t + '</span></label>';
+    }).join('');
+    return '' +
+      (isCoffee ? '' :
+        '<fieldset><legend>name</legend>' +
+        '<input class="field" type="text" id="' + p + 'Name" maxlength="60"></fieldset>') +
+      '<fieldset><legend>anong day?</legend>' +
+        '<div class="cal" id="' + p + 'Cal"></div>' +
+        '<input type="hidden" id="' + p + 'Date"></fieldset>' +
+      '<fieldset><legend>anong oras?</legend><div class="chips">' + times + '</div></fieldset>' +
+      '<fieldset><legend>may isasama ka baa</legend><div class="chips">' +
+        '<label><input type="radio" name="' + p + 'guests" value="no" checked><span>wala</span></label>' +
+        '<label><input type="radio" name="' + p + 'guests" value="yes"><span>meron</span></label></div>' +
+        '<div id="' + p + 'GuestDetails" class="guestDetails hidden">' +
+          '<label>ilan sila?<select class="field" id="' + p + 'GuestCount">' +
+            '<option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6 or more</option>' +
+          '</select></label>' +
+          '<label>sino sinoo' +
+            '<input class="field" type="text" id="' + p + 'GuestNames" "></label>' +
+        '</div></fieldset>' +
+      '<button class="confirmBtn" id="' + p + 'Confirm" disabled>Confirm</button>';
+  }
+
+  function wireForm(p, type, onDone) {
+    var confirmBtn = $(p + 'Confirm');
+
+    function checkReady() {
+      confirmBtn.disabled = !($(p + 'Date').value && document.querySelector('input[name=' + p + 'time]:checked'));
+    }
+    $(p + 'Date').addEventListener('input', checkReady);
+    $(p + 'Date').addEventListener('change', checkReady);
+    document.querySelectorAll('input[name=' + p + 'time]').forEach(function (r) {
+      r.addEventListener('change', checkReady);
+    });
+    document.querySelectorAll('input[name=' + p + 'guests]').forEach(function (r) {
+      r.addEventListener('change', function () {
+        $(p + 'GuestDetails').classList.toggle('hidden', r.value !== 'yes' || !r.checked);
+      });
+    });
+
+    if (type === 'skate') {
+      $(p + 'Name').addEventListener('input', function () {
+        if (this.value.trim().toLowerCase() === ADMIN_CODE) {
+          window.location.href = ADMIN_PAGE;
+        }
+      });
+    }
+
+    confirmBtn.addEventListener('click', function () {
+      var date = $(p + 'Date').value;
+      if (!date || date < TODAY) { $(p + 'Date').focus(); return; }
+      var bringing = document.querySelector('input[name=' + p + 'guests]:checked').value === 'yes';
+      saveResponse({
+        type: type,
+        name: ($(p + 'Name') || $('skateName')).value.trim().slice(0, 60),
+        date: date,
+        time: document.querySelector('input[name=' + p + 'time]:checked').value,
+        bringing: bringing,
+        count: bringing ? $(p + 'GuestCount').value : '',
+        names: bringing ? $(p + 'GuestNames').value.trim().slice(0, 200) : ''
+      });
+      onDone();
+    });
+  }
+
+  // ---- Calendar picker (fills the hidden <input id="...Date"> with YYYY-MM-DD) ----
+  var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var DOW = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+
+  function buildCalendar(p) {
+    var root = $(p + 'Cal'), hidden = $(p + 'Date');
+    var t = TODAY.split('-');
+    var curY = +t[0], curM = +t[1] - 1;
+    var viewY = curY, viewM = curM, selected = '';
+
+    function iso(y, m, d) {
+      return y + '-' + String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+    }
+    function nice(v, opts) {
+      var a = v.split('-');
+      return new Date(+a[0], +a[1] - 1, +a[2]).toLocaleDateString('en-US', opts);
+    }
+
+    function draw() {
+      var first = new Date(viewY, viewM, 1).getDay();
+      var total = new Date(viewY, viewM + 1, 0).getDate();
+      var atStart = viewY === curY && viewM === curM;
+
+      var h = '<div class="calHead">' +
+        '<button type="button" class="calNav" data-nav="-1" aria-label="Previous month"' + (atStart ? ' disabled' : '') + '>&#8249;</button>' +
+        '<div class="calTitle" aria-live="polite">' + MONTHS[viewM] + ' ' + viewY + '</div>' +
+        '<button type="button" class="calNav" data-nav="1" aria-label="Next month">&#8250;</button></div>' +
+        '<div class="calGrid">';
+      DOW.forEach(function (d) { h += '<div class="calDow">' + d + '</div>'; });
+      for (var i = 0; i < first; i++) h += '<span></span>';
+      for (var d = 1; d <= total; d++) {
+        var v = iso(viewY, viewM, d);
+        var cls = 'calDay' + (v === TODAY ? ' today' : '') + (v === selected ? ' sel' : '');
+        h += '<button type="button" class="' + cls + '" data-date="' + v + '"' +
+          ' aria-label="' + nice(v, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }) + '"' +
+          ' aria-pressed="' + (v === selected) + '"' + (v < TODAY ? ' disabled' : '') + '>' + d + '</button>';
+      }
+      h += '</div><div class="calPick">' +
+        (selected ? '<b>' + nice(selected, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }) + '</b>' : '') +
+        '</div>';
+      root.innerHTML = h;
+    }
+
+    root.addEventListener('click', function (e) {
+      var b = e.target.closest('button');
+      if (!b || b.disabled) return;
+      if (b.dataset.nav) {
+        viewM += +b.dataset.nav;
+        if (viewM < 0) { viewM = 11; viewY--; }
+        if (viewM > 11) { viewM = 0; viewY++; }
+        draw();
+        var nav = root.querySelector('[data-nav="' + b.dataset.nav + '"]');
+        if (nav && !nav.disabled) nav.focus();
+      } else if (b.dataset.date) {
+        selected = b.dataset.date;
+        hidden.value = selected;
+        hidden.dispatchEvent(new Event('change'));
+        draw();
+        root.querySelector('[data-date="' + selected + '"]').focus();
+      }
+    });
+    draw();
+  }
+
+  $('skateForm').innerHTML = formHTML('skate', false);
+  $('coffeeForm').innerHTML = formHTML('coffee', true);
+  buildCalendar('skate');
+  buildCalendar('coffee');
+
+  wireForm('skate', 'skate', function () { show('stepThanks'); snow(60); });
+  wireForm('coffee', 'coffee', function () { show('stepFinal'); snow(30); });
+
+  $('coffeeBtn').addEventListener('click', function () {
+    show('stepCoffee');
+  });
+
+  // ---- Typable note on the final page ----
+  $('noteSend').addEventListener('click', function () {
+    var text = $('noteText').value.trim().slice(0, 300);
+    if (!text) { $('noteText').focus(); return; }
+    saveResponse({ type: 'note', note: text });
+    $('noteText').disabled = true;
+    $('noteSend').classList.add('hidden');
+    $('noteDone').classList.remove('hidden');
+  });
+
+  var noClickCount = 0;
+  var noModal = $('noModal'), modalYes = $('modalYes'), modalNo = $('modalNo');
+  var noImg = $('noImg'), noEmoji = $('noEmoji');
+
+  noImg.addEventListener('load', function () {
+    noImg.classList.remove('hidden');
+    noEmoji.classList.add('hidden');
+  });
+  noImg.addEventListener('error', function () {      
+    noImg.classList.add('hidden');
+    noEmoji.classList.remove('hidden');
+  });
+
+  function openNoModal() {
+    var pop = NO_POPUPS[Math.min(noClickCount, NO_POPUPS.length - 1)];
+    noClickCount++;
+    var last = noClickCount >= NO_POPUPS.length;
+
+    noEmoji.textContent = pop.emoji;
+    noImg.classList.add('hidden');
+    noEmoji.classList.remove('hidden');
+    noImg.src = pop.src;
+    $('noTitle').textContent = pop.title;
+    $('noMsg').textContent = pop.msg;
+
+    if (last) {                                       
+      modalNo.disabled = true;
+      noBtn.disabled = true;
+      noBtn.style.color = 'grey';
+    }
+    noModal.classList.remove('hidden');
+
+    var box = noModal.querySelector('.modalBox');
+    box.style.animation = 'none';
+    void box.offsetWidth;
+    box.style.animation = '';
+
+    modalYes.focus();
+  }
+
+  noBtn.addEventListener('click', openNoModal);
+  modalNo.addEventListener('click', openNoModal);   
+
+  function snow(count) {
+    if (document.body.classList.contains('coffee')) return;   
+    for (var i = 0; i < count; i++) {
+      var f = document.createElement('div');
+      f.className = 'flake';
+      f.textContent = '\u2744';
+      f.style.left = Math.random() * 100 + 'vw';
+      f.style.fontSize = (14 + Math.random() * 26) + 'px';
+      f.style.animationDuration = (3 + Math.random() * 3) + 's';
+      f.style.animationDelay = (Math.random() * 2) + 's';
+      document.body.appendChild(f);
+    }
+  }
+
+  function sayYes() {
+    noModal.classList.add('hidden');
+    show('stepPick');
+    snow(40);
+  }
+  yesBtn.addEventListener('click', sayYes);
+  modalYes.addEventListener('click', sayYes);
+
+  function saveResponse(data) {
+    data.submitted = new Date().toISOString();
+    if (DB_URL) {
+      fetch(DB_URL + '/responses.json', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      }).catch(function () {});
+    } else {
+      try {
+        var all = JSON.parse(localStorage.getItem('invite_responses') || '[]');
+        all.push(data);
+        localStorage.setItem('invite_responses', JSON.stringify(all));
+      } catch (e) {}
+    }
+  }
+</script>
+</body>
+</html>
